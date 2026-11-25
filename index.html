@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voleybol Isınma Koçu</title>
+<style>
+  :root{
+    --bg:#0d1b2a; --panel:#13263b; --panel2:#1b3350; --text:#eef4fb; --muted:#9db2c8;
+    --yellow:#ffd23f; --blue:#3fa7ff; --green:#3ddc84; --orange:#ffa53f; --red:#ff5d5d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh}
+  header{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;background:var(--panel);border-bottom:3px solid var(--yellow)}
+  header h1{margin:0;font-size:22px;letter-spacing:.3px}
+  header .timer{font-variant-numeric:tabular-nums;color:var(--yellow);font-weight:700;font-size:18px}
+  .hidden{display:none!important}
+  .screen{max-width:760px;margin:40px auto;padding:30px;background:var(--panel);border-radius:18px;text-align:center}
+  .screen h2{margin-top:0;font-size:28px}
+  .screen ul{text-align:left;line-height:1.7;color:var(--muted)}
+  .btn{background:var(--yellow);color:#1a1a1a;border:0;border-radius:12px;padding:12px 22px;font-size:17px;font-weight:700;cursor:pointer}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.sec{background:var(--panel2);color:var(--text)}
+  .btn:disabled{opacity:.5;cursor:default}
+  #status{margin-top:16px;color:var(--muted);min-height:24px}
+  #app{display:grid;grid-template-columns:290px 1fr 300px;gap:16px;padding:16px}
+  @media (max-width:1100px){#app{grid-template-columns:1fr}}
+  .card{background:var(--panel);border-radius:16px;padding:16px}
+  .region{display:inline-block;background:var(--blue);color:#06213b;font-weight:800;border-radius:20px;padding:3px 12px;font-size:13px}
+  #exName{margin:10px 0 6px;font-size:22px}
+  #demo{display:block;margin:8px auto;background:linear-gradient(#18324f,#102338);border-radius:14px;width:100%;max-width:260px}
+  #exDesc{color:var(--muted);line-height:1.5;font-size:15px}
+  .videoWrap{position:relative;border-radius:16px;overflow:hidden;background:#000;aspect-ratio:16/9}
+  video,#overlay{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+  #banner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:54px;font-weight:900;color:#fff;text-shadow:0 4px 18px rgba(0,0,0,.8);pointer-events:none;padding:20px}
+  #banner.small{font-size:30px}
+  #feedback{margin-top:12px;padding:16px 18px;border-radius:14px;font-size:22px;font-weight:700;background:var(--panel2);border-left:8px solid var(--blue);min-height:64px}
+  #feedback.good{border-color:var(--green)} #feedback.warn{border-color:var(--orange)} #feedback.bad{border-color:var(--red)}
+  .counter{text-align:center}
+  .counter .big{font-size:64px;font-weight:900;color:var(--yellow);line-height:1}
+  .counter .lbl{color:var(--muted)}
+  .meter{height:14px;background:var(--panel2);border-radius:8px;overflow:hidden;margin:12px 0 4px}
+  .meter>div{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .1s}
+  .steps{list-style:none;padding:0;margin:14px 0 0}
+  .steps li{display:flex;gap:10px;align-items:center;padding:7px 8px;border-radius:10px;font-size:14px;color:var(--muted)}
+  .steps li.cur{background:var(--panel2);color:var(--text);font-weight:700}
+  .steps li.ok{color:var(--green)}
+  .steps li.skip{color:var(--orange)}
+  .steps .ic{width:22px;text-align:center}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .controls .btn{flex:1;padding:10px;font-size:14px}
+  table{width:100%;border-collapse:collapse;margin:16px 0}
+  td,th{padding:8px;border-bottom:1px solid var(--panel2);text-align:left}
+  .note{font-size:13px;color:var(--muted);margin-top:14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏐 Voleybol Isınma Koçu</h1>
+  <div class="timer" id="timer">00:00</div>
+</header>
+
+<!-- BAŞLANGIÇ -->
+<div id="start" class="screen">
+  <h2>Maç öncesi ısınmaya hazır mısın?</h2>
+  <p>Bu uygulama kameranla seni izler, her hareketi önce gösterir, sonra doğru yapıp yapmadığını kontrol eder ve tekrarlarını sayar.</p>
+  <ul>
+    <li>📷 Kameradan <b>2–3 metre</b> uzakta, <b>tüm vücudun</b> görünecek şekilde dur.</li>
+    <li>💡 Odanın aydınlık olmasına, arkanda karışık eşya olmamasına dikkat et.</li>
+    <li>🔊 Sesini aç, koç sana sesli yol gösterecek.</li>
+    <li>🧠 Hareketler <b>boyundan ayaklara</b> doğru sırayla ilerler (10 hareket, yaklaşık 6–8 dakika).</li>
+    <li>⚠️ Hareketleri yavaş ve kontrollü yap. Bir yerin ağrırsa dur ve öğretmenine/antrenörüne söyle.</li>
+  </ul>
+  <button class="btn" id="startBtn">Kamerayı Aç ve Başla</button>
+  <div id="status"></div>
+  <p class="note">Görüntü bilgisayarında işlenir, hiçbir yere gönderilmez. İlk açılışta internet gerekir (yapay zekâ modeli indirilir).</p>
+</div>
+
+<!-- UYGULAMA -->
+<div id="app" class="hidden">
+  <div class="card">
+    <span class="region" id="exRegion">Boyun</span>
+    <h2 id="exName">—</h2>
+    <canvas id="demo" width="240" height="320"></canvas>
+    <p id="exDesc"></p>
+  </div>
+
+  <div>
+    <div class="videoWrap">
+      <video id="video" playsinline muted></video>
+      <canvas id="overlay"></canvas>
+      <div id="banner"></div>
+    </div>
+    <div id="feedback">Hazırlanıyor…</div>
+  </div>
+
+  <div class="card">
+    <div class="counter">
+      <div class="lbl">Tekrar</div>
+      <div class="big"><span id="count">0</span><span style="font-size:32px;color:var(--muted)"> / <span id="target">0</span></span></div>
+    </div>
+    <div class="meter"><div id="meter"></div></div>
+    <div class="lbl" style="text-align:center;color:var(--muted);font-size:13px">Hareket hedefine ne kadar yaklaştın</div>
+    <div class="controls">
+      <button class="btn sec" id="prevBtn">⏮ Geri</button>
+      <button class="btn sec" id="pauseBtn">⏸ Duraklat</button>
+      <button class="btn sec" id="skipBtn">⏭ Atla</button>
+      <button class="btn sec" id="soundBtn">🔊 Ses Açık</button>
+    </div>
+    <ul class="steps" id="steps"></ul>
+  </div>
+</div>
+
+<!-- BİTİŞ -->
+<div id="finish" class="screen hidden">
+  <h2>🎉 Isınma tamamlandı! Maça hazırsın! 🏐</h2>
+  <p id="finishTime"></p>
+  <table id="summary"></table>
+  <button class="btn" id="againBtn">Tekrar Isın</button>
+</div>
+
+<script type="module">
+import { PoseLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+const $ = id => document.getElementById(id);
+const video = $('video'), overlay = $('overlay'), octx = overlay.getContext('2d');
+const demo = $('demo'), dctx = demo.getContext('2d');
+
+/* ---------------- yardımcı geometri ---------------- */
+const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+const mid = (a,b) => ({x:(a.x+b.x)/2, y:(a.y+b.y)/2, v:Math.min(a.v,b.v)});
+function angle(a,b,c){ // b köşesindeki açı (derece)
+  const v1={x:a.x-b.x,y:a.y-b.y}, v2={x:c.x-b.x,y:c.y-b.y};
+  const d=(v1.x*v2.x+v1.y*v2.y)/(Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y)||1);
+  return Math.acos(Math.max(-1,Math.min(1,d)))*180/Math.PI;
+}
+const clamp01 = x => Math.max(0,Math.min(1,x));
+
+/* MediaPipe nokta numaraları (kişinin kendi sağı/solu) */
+const N={nose:0,lEar:7,rEar:8,lSh:11,rSh:12,lEl:13,rEl:14,lWr:15,rWr:16,lHip:23,rHip:24,lKn:25,rKn:26,lAn:27,rAn:28,lHeel:29,rHeel:30,lFoot:31,rFoot:32};
+
+/* ---------------- tekrar sayma makineleri ---------------- */
+// A durumundan B durumuna geçiş = 1 tekrar
+function cycle(st,aCond,bCond,frames=3){
+  st.ca = aCond ? (st.ca||0)+1 : 0;
+  st.cb = bCond ? (st.cb||0)+1 : 0;
+  if (st.phase!=='A' && st.ca>=frames) st.phase='A';
+  if (st.phase==='A' && st.cb>=frames){ st.phase='B'; return true; }
+  return false;
+}
+// Sol / orta / sağ sırayla: her tarafa gidiş = 1 tekrar (ortadan geçmek ve taraf değiştirmek gerekir)
+function alternate(st,s,frames=3){
+  if (s===st.cand) st.cc++; else { st.cand=s; st.cc=1; }
+  if (st.cc<frames || s==null) return false;
+  if (s==='C'){ st.centered=true; return false; }
+  if (st.centered && s!==st.last){ st.last=s; st.centered=false; return true; }
+  return false;
+}
+function cycUpdate(st,a,b,msgs,prog,warn){
+  const rep=cycle(st,a,b);
+  let msg,lvl='info';
+  if (warn){ msg=warn; lvl='warn'; }
+  else if (st.phase==='B'){ msg=msgs.back; lvl='good'; }
+  else if (st.phase==='A'){ msg=msgs.go; }
+  else { msg=msgs.start; }
+  return {rep,msg,lvl,prog};
+}
+function altUpdate(st,s,names,prog,warn){
+  const rep=alternate(st,s);
+  let msg,lvl='info';
+  if (warn){ msg=warn; lvl='warn'; }
+  else if (s==='L'||s==='R'){
+    if (s===st.last && !st.centered){ msg='Güzel! Şimdi ortaya dön.'; lvl='good'; }
+    else if (!st.centered){ msg='Önce ortaya dön.'; lvl='warn'; }
+    else { msg='Diğer tarafa! ' + names[s==='L'?'R':'L']; lvl='warn'; }
+  } else {
+    const next = st.last==='L'?'R' : st.last==='R'?'L' : null;
+    msg = next ? names[next] : names.any;
+  }
+  return {rep,msg,lvl,prog};
+}
+
+/* ---------------- gösterim figürü ---------------- */
+const B={head:[120,60],neck:[120,82],lSh:[95,95],rSh:[145,95],lEl:[88,135],rEl:[152,135],lWr:[84,175],rWr:[156,175],
+  lHip:[105,180],rHip:[135,180],lKn:[105,235],rKn:[135,235],lAn:[105,290],rAn:[135,290],lToe:[95,300],rToe:[145,300]};
+const P=(o={})=>{const r={}; for(const k in B) r[k]=[...(o[k]||B[k])]; return r;};
+const mv=(p,keys,dx,dy)=>{for(const k of keys) p[k]=[p[k][0]+dx,p[k][1]+dy]; return p;};
+const rot=(p,keys,c,deg)=>{const r=deg*Math.PI/180,cs=Math.cos(r),sn=Math.sin(r);
+  for(const k of keys){const x=p[k][0]-c[0],y=p[k][1]-c[1]; p[k]=[c[0]+x*cs-y*sn,c[1]+x*sn+y*cs];} return p;};
+const UP=['head','neck','lSh','rSh','lEl','rEl','lWr','rWr'];
+const ALL_BUT_TOES=Object.keys(B).filter(k=>!k.endsWith('Toe'));
+function armPose(th){
+  const p=P(), r=th*Math.PI/180;
+  const dl=[-Math.sin(r),Math.cos(r)], dr=[Math.sin(r),Math.cos(r)];
+  p.lEl=[95+dl[0]*40,95+dl[1]*40]; p.lWr=[95+dl[0]*80,95+dl[1]*80];
+  p.rEl=[145+dr[0]*40,95+dr[1]*40]; p.rWr=[145+dr[0]*80,95+dr[1]*80];
+  return p;
+}
+const ARMS_SIDE=P({lEl:[55,95],lWr:[15,95],rEl:[185,95],rWr:[225,95]});
+const ARMS_UP={lEl:[100,55],lWr:[112,17],rEl:[140,55],rWr:[128,17]};
+const HANDS_HIP=P({lEl:[76,140],lWr:[103,172],rEl:[164,140],rWr:[137,172]});
+
+/* ---------------- HAREKETLER (baştan ayağa) ---------------- */
+const EXERCISES=[
+{
+  region:'Boyun', name:'Boyun Yana Eğme', reps:6,
+  desc:'Dik dur, omuzlarını sabit tut. Başını yavaşça bir omzuna doğru eğ, ortaya dön, sonra diğer omzuna eğ. Kulağını omzuna yaklaştırmaya çalış.',
+  voice:'Birinci hareket: boyun yana eğme. Omuzların sabit kalsın, başını yavaşça bir omzuna, sonra diğer omzuna eğ.',
+  need:[0,7,8,11,12], hl:['head','neck'],
+  frames:[{p:P(),t:.7},{p:P({head:[106,66]}),t:1},{p:P(),t:.7},{p:P({head:[134,66]}),t:1}],
+  update(m,st){
+    const tilt=(m.p(N.rEar).y-m.p(N.lEar).y)/m.SW; // >0: sağ kulak aşağıda = sağa eğik
+    const T=0.12;
+    const s = tilt>T?'R' : tilt<-T?'L' : Math.abs(tilt)<0.05?'C' : null;
+    const shT=Math.abs(m.p(N.rSh).y-m.p(N.lSh).y)/m.SW;
+    const warn = shT>0.12 ? 'Omuzlarını düz tut, sadece başını eğ.' : null;
+    return altUpdate(st,s,{L:'Başını SOL omzuna eğ.',R:'Başını SAĞ omzuna eğ.',any:'Başını yavaşça bir omzuna doğru eğ.'},clamp01(Math.abs(tilt)/T),warn);
+  }
+},
+{
+  region:'Omuz', name:'Omuz Kaldırma', reps:8,
+  desc:'Kolların yanda gevşek dursun. İki omzunu birden kulaklarına doğru kaldır, 1 saniye bekle ve bırak.',
+  voice:'İkinci hareket: omuz kaldırma. İki omzunu kulaklarına doğru kaldır, sonra gevşeterek bırak.',
+  need:[0,11,12], hl:['lSh','rSh','neck'],
+  frames:[{p:P(),t:.8},{p:P({lSh:[95,80],rSh:[145,80],lEl:[88,120],rEl:[152,120],lWr:[84,160],rWr:[156,160]}),t:.8}],
+  update(m,st){
+    const r=(m.shMid.y-m.p(N.nose).y)/m.SW;
+    st.base = Math.max(r, (st.base||r)*0.998);
+    const up = r < st.base*0.80, down = r > st.base*0.92;
+    return cycUpdate(st,down,up,{start:'Omuzlarını gevşet, kolların yanda dursun.',go:'Omuzlarını kulaklarına doğru kaldır!',back:'Süper! Şimdi omuzlarını bırak.'},
+      clamp01((st.base-r)/(st.base*0.2)));
+  }
+},
+{
+  region:'Kollar', name:'Kol Çevirme', reps:8, linear:true,
+  desc:'Kollarını düz tutarak yanlardan büyük daireler çiz: aşağıdan başlayıp başının üstüne kadar kaldır ve tekrar aşağı indir.',
+  voice:'Üçüncü hareket: kol çevirme. Kolların dümdüz olsun, yanlardan büyük daireler çiz.',
+  need:[0,11,12,13,14,15,16,23,24], hl:['lSh','rSh','lEl','rEl','lWr','rWr'],
+  frames:[0,45,90,135,180,225,270,315].map(a=>({p:armPose(a),t:.22})),
+  update(m,st){
+    const wy=(m.p(N.lWr).y+m.p(N.rWr).y)/2;
+    const down = wy > m.shMid.y + 0.7*m.torso;
+    const up = m.p(N.lWr).y < m.p(N.nose).y && m.p(N.rWr).y < m.p(N.nose).y;
+    const elb=Math.min(angle(m.p(N.lSh),m.p(N.lEl),m.p(N.lWr)),angle(m.p(N.rSh),m.p(N.rEl),m.p(N.rWr)));
+    const high = wy < m.shMid.y;
+    const warn = high && elb<140 ? 'Dirseklerini bükme, kolların dümdüz olsun.' : null;
+    const prog=clamp01((m.shMid.y+0.7*m.torso-wy)/(0.7*m.torso+(m.shMid.y-m.p(N.nose).y)));
+    return cycUpdate(st,down,up,{start:'Kollarını aşağı indirerek başla.',go:'Kollarını yanlardan başının üstüne kaldır!',back:'Harika! Şimdi daireyi tamamla, aşağı indir.'},prog,warn);
+  }
+},
+{
+  region:'Göğüs & Sırt', name:'Kolları Aç – Yukarıda Birleştir', reps:8,
+  desc:'Kollarını omuz hizasında yana aç (T harfi gibi), sonra başının üstünde ellerini birleştir. Tekrar T pozisyonuna dön.',
+  voice:'Dördüncü hareket: kollarını yana aç, T harfi yap, sonra ellerini başının üstünde birleştir.',
+  need:[0,11,12,13,14,15,16], hl:['lSh','rSh','lEl','rEl','lWr','rWr','neck'],
+  frames:[{p:P(),t:.6},{p:ARMS_SIDE,t:.8},{p:P(ARMS_UP),t:.8},{p:ARMS_SIDE,t:.6}],
+  update(m,st){
+    const lW=m.p(N.lWr), rW=m.p(N.rWr), lS=m.p(N.lSh), rS=m.p(N.rSh);
+    const side = Math.abs(lW.y-lS.y)<0.45*m.SW && Math.abs(rW.y-rS.y)<0.45*m.SW && dist(lW,rW)>2.2*m.SW;
+    const up = lW.y<m.p(N.nose).y && rW.y<m.p(N.nose).y && Math.abs(lW.x-rW.x)<1.3*m.SW;
+    let warn=null;
+    if (st.phase!=='A' && !side && (lW.y<m.shMid.y || rW.y<m.shMid.y) && dist(lW,rW)<2.2*m.SW && !up) warn='Kollarını iyice yana aç, omuz hizasında tut.';
+    const prog = up?1 : side?0.5 : 0.2;
+    return cycUpdate(st,side,up,{start:'Kollarını yana aç: T harfi yap.',go:'Şimdi ellerini başının üstünde birleştir!',back:'Çok iyi! Tekrar T pozisyonuna dön.'},prog,warn);
+  }
+},
+{
+  region:'Bel & Gövde', name:'Gövde Yana Eğilme', reps:6,
+  desc:'Ellerini beline koy, ayakların omuz genişliğinde olsun. Gövdeni öne değil, tam yana doğru eğ. Ortaya dön, sonra diğer tarafa eğ.',
+  voice:'Beşinci hareket: ellerin belinde, gövdeni bir yana eğ, ortaya dön, sonra diğer yana eğ.',
+  need:[11,12,23,24], hl:['lSh','rSh','lHip','rHip','neck'],
+  frames:[{p:HANDS_HIP,t:.6},{p:rot(P(HANDS_HIP),UP,[120,180],-18),t:1},{p:HANDS_HIP,t:.6},{p:rot(P(HANDS_HIP),UP,[120,180],18),t:1}],
+  update(m,st){
+    const ang=Math.atan2(m.shMid.x-m.hipMid.x, m.hipMid.y-m.shMid.y)*180/Math.PI; // >0: kişinin soluna
+    const s = ang>11?'L' : ang<-11?'R' : Math.abs(ang)<5?'C' : null;
+    const warn = m.torso < 0.75*m.torsoRef ? 'Öne eğilme, gövdeni tam yana eğ.' : null;
+    return altUpdate(st,s,{L:'Gövdeni SOLA eğ.',R:'Gövdeni SAĞA eğ.',any:'Gövdeni yavaşça bir yana eğ.'},clamp01(Math.abs(ang)/11),warn);
+  }
+},
+{
+  region:'Kalça & Arka Bacak', name:'Öne Eğilip Dizlere Uzanma', reps:6,
+  desc:'Dizlerini çok bükmeden öne doğru eğil, ellerinle dizlerinin altına (mümkünse ayak bileklerine) uzan. Yavaşça doğrul.',
+  voice:'Altıncı hareket: dizlerini bükmeden öne eğil, ellerinle dizlerinin altına uzan, sonra yavaşça doğrul.',
+  need:[11,12,15,16,23,24,25,26,27,28], hl:['lHip','rHip','lKn','rKn','lSh','rSh'],
+  frames:[{p:P(),t:.8},{p:P({head:[120,172],neck:[120,152],lSh:[98,150],rSh:[142,150],lEl:[100,210],rEl:[140,210],lWr:[106,268],rWr:[134,268]}),t:1.2}],
+  update(m,st){
+    const wy=(m.p(N.lWr).y+m.p(N.rWr).y)/2;
+    const kneeY=(m.p(N.lKn).y+m.p(N.rKn).y)/2;
+    const upright = (m.hipMid.y-m.shMid.y) > 0.8*m.torsoRef;
+    const down = wy > kneeY;
+    const kAng=Math.min(angle(m.p(N.lHip),m.p(N.lKn),m.p(N.lAn)),angle(m.p(N.rHip),m.p(N.rKn),m.p(N.rAn)));
+    const warn = (wy > m.hipMid.y && kAng<145) ? 'Dizlerini çok bükme, bacakların düz kalsın.' : null;
+    return cycUpdate(st,upright,down,{start:'Dik dur.',go:'Öne eğil, ellerini dizlerinin altına uzat!',back:'Harika esneme! Şimdi yavaşça doğrul.'},
+      clamp01((wy-m.hipMid.y)/Math.max(kneeY-m.hipMid.y,1)),warn);
+  }
+},
+{
+  region:'Bacaklar', name:'Squat (Çömelme)', reps:8,
+  desc:'Ayaklar omuz genişliğinde, kollar önde. Sandalyeye oturur gibi kalçanı geriye ve aşağı indir, sonra kalk. Dizlerin içe kapanmasın.',
+  voice:'Yedinci hareket: squat. Sandalyeye oturur gibi aşağı in ve kalk. Dizlerin içe kapanmasın.',
+  need:[11,12,23,24,25,26,27,28], hl:['lHip','rHip','lKn','rKn','lAn','rAn'],
+  frames:[{p:P({lEl:[100,110],lWr:[108,112],rEl:[140,110],rWr:[132,112]}),t:.8},
+    {p:(()=>{const p=P();mv(p,[...UP,'lHip','rHip'],0,45);p.lKn=[94,250];p.rKn=[146,250];p.lEl=[101,147];p.lWr=[108,150];p.rEl=[139,147];p.rWr=[132,150];return p;})(),t:.9}],
+  update(m,st){
+    const kA=(angle(m.p(N.lHip),m.p(N.lKn),m.p(N.lAn))+angle(m.p(N.rHip),m.p(N.rKn),m.p(N.rAn)))/2;
+    const up=kA>160, down=kA<115;
+    let warn=null;
+    const kd=Math.abs(m.p(N.lKn).x-m.p(N.rKn).x), ad=Math.abs(m.p(N.lAn).x-m.p(N.rAn).x);
+    if (kA<145 && kd<0.7*ad) warn='Dizlerini içe kapatma, hafifçe dışarı it.';
+    else if (st.phase==='A' && kA<145 && kA>=115) { /* inerken teşvik */ }
+    const r=cycUpdate(st,up,down,{start:'Dik dur, ayakların omuz genişliğinde.',go:'Kalçanı geriye ve aşağı indir!',back:'Çok iyi! Şimdi kalk.'},clamp01((170-kA)/55),warn);
+    if (!warn && st.phase==='A' && kA<150 && kA>=115) r.msg='Biraz daha aşağı in!';
+    return r;
+  }
+},
+{
+  region:'Dizler', name:'Yerinde Diz Çekme', reps:10,
+  desc:'Yerinde koşar gibi dizlerini sırayla kalça hizasına kadar yukarı çek. Kollarını da koşar gibi salla.',
+  voice:'Sekizinci hareket: yerinde diz çekme. Dizlerini sırayla kalça hizasına kadar yukarı çek.',
+  need:[11,12,23,24,25,26], hl:['lHip','rHip','lKn','rKn'],
+  frames:[{p:P(),t:.3},{p:P({lKn:[108,195],lAn:[104,245],lToe:[96,252],rEl:[150,118],rWr:[138,102]}),t:.35},{p:P(),t:.3},{p:P({rKn:[132,195],rAn:[136,245],rToe:[144,252],lEl:[90,118],lWr:[102,102]}),t:.35}],
+  update(m,st){
+    const ll=(m.p(N.lKn).y-m.p(N.lHip).y)/m.torsoRef, rl=(m.p(N.rKn).y-m.p(N.rHip).y)/m.torsoRef;
+    const T=0.45;
+    const s = ll<T&&ll<rl ? 'L' : rl<T ? 'R' : (ll>0.6&&rl>0.6) ? 'C' : null;
+    const r=altUpdate(st,s,{L:'SOL dizini yukarı çek!',R:'SAĞ dizini yukarı çek!',any:'Bir dizini kalça hizasına çek!'},clamp01((0.85-Math.min(ll,rl))/(0.85-T)));
+    if (!r.rep && Math.min(ll,rl)<0.65 && Math.min(ll,rl)>=T) { r.msg='Dizini biraz daha yukarı çek!'; r.lvl='warn'; }
+    return r;
+  }
+},
+{
+  region:'Ayak Bileği & Baldır', name:'Parmak Ucunda Yükselme', reps:10,
+  desc:'Dik dur, topuklarını yerden kaldırarak parmak uçlarında yüksel, 1 saniye bekle ve yavaşça in. Smaç ve blok sıçramaları için baldırlarını hazırlar.',
+  voice:'Dokuzuncu hareket: parmak ucunda yükselme. Topuklarını kaldır, parmak uçlarında yüksel, sonra yavaşça in.',
+  need:[11,12,23,24,27,28], hl:['lAn','rAn','lToe','rToe','lKn','rKn'],
+  frames:[{p:P(),t:.8},{p:mv(P(),ALL_BUT_TOES,0,-12),t:.8}],
+  update(m,st){
+    const y=m.shMid.y;
+    if (st.base==null) st.base=y;
+    const lift=(st.base-y)/m.torsoRef;
+    const heel=((m.p(N.lFoot).y-m.p(N.lHeel).y)+(m.p(N.rFoot).y-m.p(N.rHeel).y))/2/m.torsoRef;
+    const up = lift>0.06 || heel>0.05;
+    const down = lift<0.025 && heel<0.03;
+    if (!up && lift<0.03) st.base = st.base*0.92 + y*0.08; // duruş değişirse referansı güncelle
+    return cycUpdate(st,down,up,{start:'Dik dur, ayakların yerde.',go:'Topuklarını kaldır, parmak uçlarında yüksel!',back:'Süper! Şimdi yavaşça in.'},clamp01(Math.max(lift/0.06,heel/0.05)));
+  }
+},
+{
+  region:'Tüm Vücut', name:'Kriko (Jumping Jack)', reps:10,
+  desc:'Zıplayarak bacaklarını yana aç ve kollarını başının üstüne kaldır, sonra tekrar zıplayarak toplan. Kalbini maça hazırlar!',
+  voice:'Son hareket: kriko. Zıplayarak bacaklarını aç ve kollarını kaldır, sonra toplan.',
+  need:[0,11,12,15,16,23,24,27,28], hl:Object.keys(B),
+  frames:[{p:P(),t:.4},{p:P({...ARMS_UP,lKn:[95,235],rKn:[145,235],lAn:[80,290],rAn:[160,290],lToe:[70,300],rToe:[170,300]}),t:.4}],
+  update(m,st){
+    const ad=dist(m.p(N.lAn),m.p(N.rAn));
+    const wy=(m.p(N.lWr).y+m.p(N.rWr).y)/2;
+    const open = ad>1.3*m.SW && wy<m.shMid.y;
+    const closed = ad<1.0*m.SW && wy>m.shMid.y;
+    let warn=null;
+    if (ad>1.3*m.SW && wy>m.shMid.y) warn='Kollarını da başının üstüne kaldır!';
+    else if (wy<m.p(N.nose).y && ad<1.1*m.SW) warn='Bacaklarını da yana aç!';
+    return cycUpdate(st,closed,open,{start:'Ayakların bitişik, kolların yanda.',go:'Zıpla: bacakları aç, kolları kaldır!',back:'Harika! Zıplayıp toplan.'},clamp01((ad/m.SW-0.8)/0.5),warn);
+  }
+}
+];
+
+/* ---------------- ses ---------------- */
+let soundOn=true, trVoice=null;
+function pickVoice(){ trVoice = speechSynthesis.getVoices().find(v=>v.lang&&v.lang.toLowerCase().startsWith('tr')) || null; }
+if ('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+function say(text,interrupt=true){
+  if (!soundOn || !('speechSynthesis' in window)) return;
+  if (interrupt) speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text); u.lang='tr-TR'; if (trVoice) u.voice=trVoice; u.rate=1.05;
+  speechSynthesis.speak(u);
+}
+const NUM=['sıfır','bir','iki','üç','dört','beş','altı','yedi','sekiz','dokuz','on','on bir','on iki'];
+let lastSpokenMsg='', lastSpokenAt=0;
+
+/* ---------------- durum ---------------- */
+let landmarker=null, mode='idle', paused=false, cur=0, st={}, count=0, results=[], timers=[];
+let smooth=null, torsoRef=0, posOk=0, lastVT=-1, startTime=0, pausedAt=0, pausedTotal=0;
+
+function clearTimers(){ timers.forEach(clearTimeout); timers=[]; }
+function later(fn,ms){ timers.push(setTimeout(fn,ms)); }
+function banner(t,small=false){ $('banner').textContent=t; $('banner').classList.toggle('small',small); }
+function feedback(msg,lvl='info'){ const f=$('feedback'); f.textContent=msg; f.className=lvl==='info'?'':lvl; }
+
+function renderSteps(){
+  $('steps').innerHTML=EXERCISES.map((e,i)=>{
+    const r=results[i]; let cls='', ic=String(i+1);
+    if (r&&r.done){cls='ok';ic='✔';} else if (r&&r.skipped){cls='skip';ic='↷';}
+    if (i===cur && mode!=='finished'){cls+=' cur';ic=(r&&r.done)?'✔':'▶';}
+    return `<li class="${cls}"><span class="ic">${ic}</span><span>${e.region} · ${e.name}</span></li>`;
+  }).join('');
+}
+
+function startExercise(i){
+  clearTimers();
+  if (i>=EXERCISES.length){ return finish(); }
+  cur=i; const e=EXERCISES[i];
+  st={centered:true}; count=0;
+  $('exRegion').textContent=e.region; $('exName').textContent=`${i+1}. ${e.name}`; $('exDesc').textContent=e.desc;
+  $('count').textContent='0'; $('target').textContent=e.reps; $('meter').style.width='0%';
+  renderSteps();
+  mode='intro';
+  banner('İzle ve öğren 👀',true);
+  feedback('Soldaki figürü izle: hareket böyle yapılıyor.');
+  say(e.voice);
+  later(()=>{banner('3');},5000);
+  later(()=>{banner('2');},6000);
+  later(()=>{banner('1');},7000);
+  later(()=>{banner('Başla!'); say('Başla!'); mode='active';},8000);
+  later(()=>{if(mode==='active') banner('');},9000);
+}
+
+function repDone(){
+  const e=EXERCISES[cur];
+  count++; $('count').textContent=count;
+  if (count>=e.reps){
+    mode='done';
+    results[cur]={done:true,count};
+    banner('Harika! ✔'); feedback('Bu hareketi tamamladın! Sıradaki harekete geçiyoruz.','good');
+    say(count<=12?NUM[count]+'. Harika, tamamladın!':'Harika, tamamladın!');
+    renderSteps();
+    later(()=>startExercise(cur+1),2500);
+  } else {
+    say(count<=12?NUM[count]:String(count));
+  }
+}
+
+function finish(){
+  clearTimers(); mode='finished'; speechSynthesis && speechSynthesis.cancel();
+  say('Tebrikler! Isınma tamamlandı. Artık maça hazırsın!');
+  const sec=Math.round((Date.now()-startTime-pausedTotal)/1000);
+  $('finishTime').textContent=`Toplam süre: ${Math.floor(sec/60)} dk ${sec%60} sn`;
+  $('summary').innerHTML='<tr><th>Bölge</th><th>Hareket</th><th>Durum</th></tr>'+EXERCISES.map((e,i)=>{
+    const r=results[i]||{};
+    return `<tr><td>${e.region}</td><td>${e.name}</td><td>${r.done?'✅ '+r.count+' tekrar':r.skipped?'↷ Atlandı ('+(r.count||0)+'/'+e.reps+')':'—'}</td></tr>`;
+  }).join('');
+  $('app').classList.add('hidden'); $('finish').classList.remove('hidden');
+}
+
+/* ---------------- çizimler ---------------- */
+const CONN=[[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,31],[28,32],[27,29],[28,30],[7,0],[0,8]];
+function drawSkeleton(P,lvl){
+  const col = lvl==='good'?'#3ddc84' : lvl==='warn'?'#ffa53f' : '#ffffff';
+  octx.lineWidth=Math.max(3,overlay.width/250); octx.strokeStyle=col; octx.lineCap='round';
+  for (const [a,b] of CONN){ if (P[a].v<0.4||P[b].v<0.4) continue; octx.beginPath(); octx.moveTo(P[a].x,P[a].y); octx.lineTo(P[b].x,P[b].y); octx.stroke(); }
+  octx.fillStyle='#ffd23f';
+  for (const i of [0,11,12,13,14,15,16,23,24,25,26,27,28]){ if (P[i].v<0.4) continue; octx.beginPath(); octx.arc(P[i].x,P[i].y,octx.lineWidth*1.6,0,7); octx.fill(); }
+}
+
+const FIG_LINES=[['neck','head'],['neck','lSh'],['neck','rSh'],['lSh','lEl'],['lEl','lWr'],['rSh','rEl'],['rEl','rWr'],['lSh','lHip'],['rSh','rHip'],['lHip','rHip'],['lHip','lKn'],['lKn','lAn'],['rHip','rKn'],['rKn','rAn'],['lAn','lToe'],['rAn','rToe']];
+function demoPose(e,tms){
+  const F=e.frames, total=F.reduce((s,f)=>s+f.t,0);
+  let t=(tms/1000)%total, i=0;
+  while (i<F.length-1 && t>F[i].t){ t-=F[i].t; i++; }
+  const a=F[i].p, b=F[(i+1)%F.length].p;
+  let k=clamp01(t/F[i].t); if (!e.linear) k = k<.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2;
+  const out={}; for (const key in a) out[key]=[a[key][0]+(b[key][0]-a[key][0])*k, a[key][1]+(b[key][1]-a[key][1])*k];
+  return out;
+}
+function drawDemo(tms){
+  const e=EXERCISES[cur]; if (!e) return;
+  const p=demoPose(e,tms), hl=new Set(e.hl||[]);
+  dctx.clearRect(0,0,demo.width,demo.height);
+  dctx.strokeStyle='#2c4a6e'; dctx.lineWidth=3; dctx.beginPath(); dctx.moveTo(20,303); dctx.lineTo(220,303); dctx.stroke();
+  // forma (gövde)
+  dctx.fillStyle='#3fa7ff'; dctx.beginPath();
+  dctx.moveTo(...p.lSh); dctx.lineTo(...p.rSh); dctx.lineTo(...p.rHip); dctx.lineTo(...p.lHip); dctx.closePath(); dctx.fill();
+  dctx.lineCap='round'; dctx.lineJoin='round';
+  for (const [a,b] of FIG_LINES){
+    const h=hl.has(a)&&hl.has(b);
+    dctx.strokeStyle=h?'#ffd23f':'#e8f0fa'; dctx.lineWidth=h?10:8;
+    dctx.beginPath(); dctx.moveTo(...p[a]); dctx.lineTo(...p[b]); dctx.stroke();
+  }
+  dctx.fillStyle=hl.has('head')?'#ffd23f':'#e8f0fa';
+  dctx.beginPath(); dctx.arc(p.head[0],p.head[1],17,0,7); dctx.fill();
+  dctx.fillStyle='#0d1b2a'; dctx.beginPath(); dctx.arc(p.head[0]-6,p.head[1]-2,2.2,0,7); dctx.arc(p.head[0]+6,p.head[1]-2,2.2,0,7); dctx.fill();
+  dctx.fillStyle='#9db2c8'; dctx.font='12px Segoe UI'; dctx.textAlign='center';
+  dctx.fillText('Sarı yerler çalışan bölge',120,318);
+}
+
+/* ---------------- ana döngü ---------------- */
+function handle(res){
+  if (overlay.width!==video.videoWidth){ overlay.width=video.videoWidth; overlay.height=video.videoHeight; }
+  octx.clearRect(0,0,overlay.width,overlay.height);
+  const lms=res.landmarks&&res.landmarks[0];
+  if (!lms){
+    smooth=null; posOk=0;
+    if (mode==='active'||mode==='position') feedback('Seni göremiyorum. Kameranın karşısına geç.','bad');
+    return;
+  }
+  const W=video.videoWidth, H=video.videoHeight;
+  const raw=lms.map(l=>({x:l.x*W,y:l.y*H,v:l.visibility??1}));
+  if (!smooth) smooth=raw; else smooth=raw.map((q,i)=>({x:smooth[i].x*0.4+q.x*0.6,y:smooth[i].y*0.4+q.y*0.6,v:q.v}));
+  const Pt=smooth, p=i=>Pt[i];
+  const shMid=mid(p(11),p(12)), hipMid=mid(p(23),p(24));
+  const SW=Math.max(dist(p(11),p(12)),1), torso=Math.max(dist(shMid,hipMid),1);
+  torsoRef=Math.max(torso, torsoRef*0.999);
+  const m={P:Pt,p,shMid,hipMid,SW,torso,torsoRef,W,H};
+  const inFrame=i=>Pt[i].v>0.5 && Pt[i].y>0 && Pt[i].y<H && Pt[i].x>0 && Pt[i].x<W;
+
+  let lvl='info';
+  if (mode==='position'){
+    const body=[0,11,12,23,24,25,26,27,28].every(inFrame);
+    if (body){ posOk++; feedback('Seni görüyorum! Böyle kal… ('+Math.max(0,Math.ceil((30-posOk)/10))+')','good'); lvl='good'; }
+    else { posOk=0; feedback('Tüm vücudun (baştan ayak bileklerine kadar) görünsün. Biraz geri git.','warn'); lvl='warn'; }
+    if (posOk>=30){ startTime=Date.now(); pausedTotal=0; startExercise(0); }
+  } else if (mode==='active' && !paused){
+    const e=EXERCISES[cur];
+    const missing=e.need.filter(i=>!inFrame(i));
+    if (missing.length){
+      const legs=missing.some(i=>i>=25), arms=missing.some(i=>i>=13&&i<=16);
+      feedback(legs?'Bacakların görünmüyor, biraz geri git.':arms?'Kolların kadrajdan çıkıyor, biraz geri git.':'Kameraya tam karşıdan bak, vücudun görünsün.','bad');
+      lvl='warn';
+    } else {
+      const r=e.update(m,st);
+      lvl=r.lvl; feedback(r.msg,r.lvl);
+      $('meter').style.width=Math.round((r.prog||0)*100)+'%';
+      if (r.lvl==='warn' && r.msg!==lastSpokenMsg && performance.now()-lastSpokenAt>4000){ say(r.msg,false); lastSpokenMsg=r.msg; lastSpokenAt=performance.now(); }
+      if (r.rep) repDone();
+    }
+  }
+  drawSkeleton(Pt,lvl);
+}
+
+function loop(){
+  if (landmarker && video.readyState>=2 && video.currentTime!==lastVT){
+    lastVT=video.currentTime;
+    try { handle(landmarker.detectForVideo(video, performance.now())); } catch(err){ console.error(err); }
+  }
+  drawDemo(performance.now());
+  if (startTime && mode!=='finished' && !paused){
+    const s=Math.floor((Date.now()-startTime-pausedTotal)/1000);
+    $('timer').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ---------------- başlatma ---------------- */
+async function createLandmarker(){
+  const fileset=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  const opts=d=>({baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task",delegate:d},runningMode:"VIDEO",numPoses:1});
+  try { return await PoseLandmarker.createFromOptions(fileset,opts("GPU")); }
+  catch(e){ return await PoseLandmarker.createFromOptions(fileset,opts("CPU")); }
+}
+
+$('startBtn').onclick=async()=>{
+  $('startBtn').disabled=true;
+  $('status').textContent='Kamera açılıyor ve yapay zekâ modeli yükleniyor…';
+  say('Merhaba! Isınmaya hazırlanıyoruz.');
+  try{
+    const [stream,lm]=await Promise.all([
+      navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},facingMode:'user'},audio:false}),
+      createLandmarker()
+    ]);
+    landmarker=lm; video.srcObject=stream; await video.play();
+    $('start').classList.add('hidden'); $('app').classList.remove('hidden');
+    cur=0; results=[]; renderSteps();
+    $('exRegion').textContent='Hazırlık'; $('exName').textContent='Konumunu Ayarla'; $('exDesc').textContent='Kameradan 2–3 metre uzakta, yüzün kameraya dönük dur. Başından ayak bileklerine kadar tüm vücudun görünmeli.';
+    banner('Konumunu ayarla',true);
+    mode='position'; posOk=0;
+    say('Kameradan iki üç metre uzakta dur. Tüm vücudun görünsün.');
+    requestAnimationFrame(loop);
+  }catch(err){
+    console.error(err);
+    $('startBtn').disabled=false;
+    $('status').textContent='Bir sorun oldu: '+(err.name==='NotAllowedError'?'Kamera izni verilmedi. Adres çubuğundaki kamera simgesinden izin ver.':(err.message||err))+' (İnternet bağlantısını ve kamerayı kontrol et.)';
+  }
+};
+
+$('skipBtn').onclick=()=>{
+  if (mode==='position'||mode==='idle'||mode==='finished') return;
+  if (!(results[cur]&&results[cur].done)) results[cur]={skipped:true,count};
+  startExercise(cur+1);
+};
+$('prevBtn').onclick=()=>{ if (mode!=='position'&&mode!=='idle'&&mode!=='finished') startExercise(Math.max(0,cur-1)); };
+$('pauseBtn').onclick=()=>{
+  if (mode==='position'||mode==='idle') return;
+  paused=!paused;
+  $('pauseBtn').textContent=paused?'▶ Devam':'⏸ Duraklat';
+  if (paused){ pausedAt=Date.now(); banner('Duraklatıldı ⏸'); feedback('Hazır olduğunda "Devam"a bas.'); }
+  else { pausedTotal+=Date.now()-pausedAt; banner(''); }
+};
+$('soundBtn').onclick=()=>{ soundOn=!soundOn; $('soundBtn').textContent=soundOn?'🔊 Ses Açık':'🔇 Ses Kapalı'; if(!soundOn) speechSynthesis.cancel(); };
+$('againBtn').onclick=()=>{
+  $('finish').classList.add('hidden'); $('app').classList.remove('hidden');
+  results=[]; startTime=Date.now(); pausedTotal=0; startExercise(0);
+};
+document.addEventListener('keydown',e=>{
+  if (e.code==='Space'){ e.preventDefault(); $('pauseBtn').click(); }
+  if (e.code==='ArrowRight') $('skipBtn').click();
+  if (e.code==='ArrowLeft') $('prevBtn').click();
+});
+
+renderSteps(); drawDemo(0);
+</script>
+</body>
+</html>
